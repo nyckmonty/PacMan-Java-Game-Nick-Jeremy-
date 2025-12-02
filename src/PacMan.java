@@ -17,6 +17,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         char direction = 'U'; // U D L R
         int velocityX = 0;
         int velocityY = 0;
+        char desiredDirection = 'U';
 
         Block(Image image, int x, int y, int width, int height) {
             this.image = image;
@@ -263,6 +264,40 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     private void movePacman() {
+        // Turn buffering
+        boolean alignedX = (pacman.x % tileSize == 0);
+        boolean alignedY = (pacman.y % tileSize == 0);
+
+        if (alignedX && alignedY) {
+
+            int testX = pacman.x;
+            int testY = pacman.y;
+            int step = tileSize / 4;
+
+
+            switch (pacman.desiredDirection) {
+                case 'U' -> testY -= step;
+                case 'D' -> testY += step;
+                case 'L' -> testX -= step;
+                case 'R' -> testX += step;
+            }
+
+            // Test for wall collision
+            boolean blocked = false;
+            for (Block wall : walls) {
+                Block temp = new Block(pacman.image, testX, testY, pacman.width, pacman.height);
+                if (collision(temp, wall)) {
+                    blocked = true;
+                    break;
+                }
+            }
+
+            // If not blocked turn
+            if (!blocked) {
+                pacman.updateDirection(pacman.desiredDirection);
+                updatePacmanImage();
+            }
+        }
         // Store current position for wall collision check
         int oldX = pacman.x;
         int oldY = pacman.y;
@@ -402,10 +437,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     private void handleKeyPress(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP -> pacman.updateDirection('U');
-            case KeyEvent.VK_DOWN -> pacman.updateDirection('D');
-            case KeyEvent.VK_LEFT -> pacman.updateDirection('L');
-            case KeyEvent.VK_RIGHT -> pacman.updateDirection('R');
+            case KeyEvent.VK_UP -> pacman.desiredDirection = 'U';
+            case KeyEvent.VK_DOWN -> pacman.desiredDirection = 'D';
+            case KeyEvent.VK_LEFT -> pacman.desiredDirection = 'L';
+            case KeyEvent.VK_RIGHT -> pacman.desiredDirection = 'R';
         }
         updatePacmanImage();
     }
