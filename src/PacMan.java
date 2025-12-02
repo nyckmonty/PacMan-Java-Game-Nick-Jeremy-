@@ -306,13 +306,14 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
         
-        // Check for tunnel teleportation
+        // Check for tunnel teleportation 
         if (pacman.x + pacman.width < 0) {
-            // Teleport to right side
-            pacman.x = boardWidth - 1;
-        } else if (pacman.x > boardWidth) {
-            // Teleport to left side
-            pacman.x = -pacman.width + 1;
+            pacman.x = (columnCount - 1) * tileSize;     
+            pacman.y = pacman.y - (pacman.y % tileSize); 
+        }
+        else if (pacman.x > boardWidth) {
+            pacman.x = 0;                                
+            pacman.y = pacman.y - (pacman.y % tileSize);
         }
         
         // Only check wall collision if we're not in the tunnel
