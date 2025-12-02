@@ -263,9 +263,37 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     private void movePacman() {
+        // Store current position for wall collision check
+        int oldX = pacman.x;
+        int oldY = pacman.y;
+        
+        // Move Pac-Man
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
-        checkWallCollision(pacman);
+        
+        // Check for tunnel teleportation
+        if (pacman.x + pacman.width < 0) {
+            // Teleport to right side
+            pacman.x = boardWidth - 1;
+        } else if (pacman.x > boardWidth) {
+            // Teleport to left side
+            pacman.x = -pacman.width + 1;
+        }
+        
+        // Only check wall collision if we're not in the tunnel
+        if (pacman.x > 0 && pacman.x + pacman.width < boardWidth) {
+            boolean hitWall = false;
+            for (Block wall : walls) {
+                if (collision(pacman, wall)) {
+                    hitWall = true;
+                    break;
+                }
+            }
+            if (hitWall) {
+                pacman.x = oldX;
+                pacman.y = oldY;
+            }
+        }
     }
 
     private void moveGhosts() {
