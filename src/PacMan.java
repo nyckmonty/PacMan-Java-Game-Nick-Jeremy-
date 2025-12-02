@@ -454,4 +454,20 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             case 'R' -> pacman.image = pacmanRightImage;
         }
     }
+    
+    public boolean isWalkable(int r, int c) {
+        int px = c * tileSize;
+        int py = r * tileSize;
+
+        // Create a temporary 1-tile block for collision testing
+        Block temp = new Block(null, px, py, tileSize, tileSize);
+
+        // If temp collides with any wall block, it's not walkable
+        for (Block wall : walls) {
+            if (collision(temp, wall)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
