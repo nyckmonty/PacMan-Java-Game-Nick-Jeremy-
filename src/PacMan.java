@@ -10,6 +10,9 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Set;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Collections;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -397,7 +400,54 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         
         return path;
     }
+    
+    // BFS pathfinding (blinky)
+    private List<Node> bfs(Node start, Node goal) {
 
+        Queue<Node> queue = new LinkedList<>();
+        Map<Node, Node> parent = new HashMap<>();
+        Set<Node> visited = new HashSet<>();
+
+        queue.add(start);
+        visited.add(start);
+
+        int[][] dirs = {{1,0},{-1,0},{0,1},{0,-1}}; // four directions
+
+        while (!queue.isEmpty()) {
+            Node curr = queue.poll();
+
+            // Reached target
+            if (curr.equals(goal)) {
+                List<Node> path = new ArrayList<>();
+                Node temp = curr;
+                while (temp != null) {
+                    path.add(temp);
+                    temp = parent.get(temp);
+                }
+                Collections.reverse(path);
+                return path;
+            }
+
+            // Explore neighbors
+            for (int[] d : dirs) {
+                int newX = curr.x + d[0]; // column
+                int newY = curr.y + d[1]; // row
+
+                // Call isWalkable
+                if (!isWalkable(newY, newX)) continue;
+
+                Node next = new Node(newX, newY);
+
+                if (!visited.contains(next)) {
+                    visited.add(next);
+                    parent.put(next, curr);
+                    queue.add(next);
+                }
+            }
+        }
+        return null; // no path found
+    }
+    
     public void move() {
         movePacman();
         moveGhosts();
@@ -514,7 +564,28 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                     }
                 }
             }
-        } else if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
+            // Blinky BFS chase
+        else if (ghost.image == redGhostImage) {
+            if (isAlignedToGrid(ghost)) {
+
+                Node ghostNode = new Node(ghost.x / tileSize, ghost.y / tileSize);
+                Node pacNode = new Node(pacman.x / tileSize, pacman.y / tileSize);
+
+                List<Node> path = bfs(ghostNode, pacNode);
+
+                if (path != null && path.size() > 1) {
+                    Node next = path.get(1);
+                    int dx = next.x - ghostNode.x;
+                    int dy = next.y - ghostNode.y;
+
+                    if (dx > 0) ghost.updateDirection('R');
+                    else if (dx < 0) ghost.updateDirection('L');
+                    else if (dy > 0) ghost.updateDirection('D');
+                    else if (dy < 0) ghost.updateDirection('U');
+                }
+            }
+        } 
+        else if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
             ghost.updateDirection('U');
         }
 
