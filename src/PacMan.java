@@ -564,6 +564,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                     }
                 }
             }
+        }
             // Blinky BFS chase
         else if (ghost.image == redGhostImage) {
             if (isAlignedToGrid(ghost)) {
