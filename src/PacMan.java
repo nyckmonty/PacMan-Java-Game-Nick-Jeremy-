@@ -1,9 +1,19 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.util.HashSet;
-import java.util.Random;
-import javax.swing.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Random;
+import java.util.Set;
+
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
+import javax.swing.Timer;
 public class PacMan extends JPanel implements ActionListener, KeyListener {
     class Block {
         int x;
@@ -252,6 +262,141 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             g.drawString("x" + lives + " Score: " + score, tileSize / 2, tileSize / 2);
         }
     }
+    
+    // A* Pathfinding classes and methods
+    class Node implements Comparable<Node> {
+        int x, y;
+        Node parent;
+        int g, h, f;
+        
+        Node(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+        
+        @Override
+        public int compareTo(Node other) {
+            return Integer.compare(this.f, other.f);
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Node node = (Node)obj;
+            return x == node.x && y == node.y;
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, y);
+        }
+    }
+    
+    private Node findPinkGhost() {
+        for (Block ghost : ghosts) {
+            if (ghost.image == pinkGhostImage) {
+                return new Node(ghost.x / tileSize, ghost.y / tileSize);
+            }
+        }
+        return null;
+    }
+    
+    private Node predictPacmanPosition() {
+        // Predict 2 tiles ahead in current direction
+        int aheadX = pacman.x / tileSize;
+        int aheadY = pacman.y / tileSize;
+        
+        switch (pacman.direction) {
+            case 'U': aheadY -= 2; break;
+            case 'D': aheadY += 2; break;
+            case 'L': aheadX -= 2; break;
+            case 'R': aheadX += 2; break;
+        }
+        
+        // Ensure position is within bounds
+        aheadX = Math.max(0, Math.min(columnCount - 1, aheadX));
+        aheadY = Math.max(0, Math.min(rowCount - 1, aheadY));
+        
+        return new Node(aheadX, aheadY);
+    }
+    
+    private List<Node> findPath(Node start, Node target) {
+        PriorityQueue<Node> openSet = new PriorityQueue<>();
+        Set<Node> closedSet = new HashSet<>();
+        Map<Node, Node> cameFrom = new HashMap<>();
+        Map<Node, Integer> gScore = new HashMap<>();
+        
+        gScore.put(start, 0);
+        start.g = 0;
+        start.h = heuristic(start, target);
+        start.f = start.h;
+        openSet.add(start);
+        
+        while (!openSet.isEmpty()) {
+            Node current = openSet.poll();
+            
+            if (current.equals(target)) {
+                return reconstructPath(cameFrom, current);
+            }
+            
+            closedSet.add(current);
+            
+            for (Node neighbor : getNeighbors(current)) {
+                if (closedSet.contains(neighbor)) continue;
+                
+                int tentativeGScore = gScore.getOrDefault(current, Integer.MAX_VALUE) + 1;
+                
+                if (!openSet.contains(neighbor)) {
+                    openSet.add(neighbor);
+                } else if (tentativeGScore >= gScore.getOrDefault(neighbor, Integer.MAX_VALUE)) {
+                    continue;
+                }
+                
+                cameFrom.put(neighbor, current);
+                gScore.put(neighbor, tentativeGScore);
+                neighbor.g = tentativeGScore;
+                neighbor.h = heuristic(neighbor, target);
+                neighbor.f = neighbor.g + neighbor.h;
+            }
+        }
+        
+        return new ArrayList<>(); // No path found
+    }
+    
+    private List<Node> getNeighbors(Node node) {
+        List<Node> neighbors = new ArrayList<>();
+        int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}}; // Right, Down, Left, Up
+        
+        for (int[] dir : directions) {
+            int newX = node.x + dir[0];
+            int newY = node.y + dir[1];
+            
+            if (newX >= 0 && newX < columnCount && newY >= 0 && newY < rowCount) {
+                if (isWalkable(newY, newX)) {
+                    neighbors.add(new Node(newX, newY));
+                }
+            }
+        }
+        
+        return neighbors;
+    }
+    
+    private int heuristic(Node a, Node b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); // Manhattan distance
+    }
+    
+    private List<Node> reconstructPath(Map<Node, Node> cameFrom, Node current) {
+        List<Node> path = new ArrayList<>();
+        path.add(current);
+        
+        while (cameFrom.containsKey(current)) {
+            current = cameFrom.get(current);
+            path.add(0, current);
+        }
+        
+        return path;
+    }
 
     public void move() {
         movePacman();
@@ -342,10 +487,37 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    private boolean isAlignedToGrid(Block block) {
+        return block.x % tileSize == 0 && block.y % tileSize == 0;
+    }
+
     private void moveGhost(Block ghost) {
-        if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
+        if (ghost.image == pinkGhostImage) {
+            if (isAlignedToGrid(ghost)) {
+                Node ghostNode = new Node(ghost.x / tileSize, ghost.y / tileSize);
+                Node target = predictPacmanPosition();
+                List<Node> path = findPath(ghostNode, target);
+
+                if (path.size() > 1) {
+                    Node next = path.get(1);
+                    int dx = next.x - ghostNode.x;
+                    int dy = next.y - ghostNode.y;
+
+                    if (dx > 0) {
+                        ghost.updateDirection('R');
+                    } else if (dx < 0) {
+                        ghost.updateDirection('L');
+                    } else if (dy > 0) {
+                        ghost.updateDirection('D');
+                    } else if (dy < 0) {
+                        ghost.updateDirection('U');
+                    }
+                }
+            }
+        } else if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
             ghost.updateDirection('U');
         }
+
         ghost.x += ghost.velocityX;
         ghost.y += ghost.velocityY;
         checkWallCollision(ghost);
