@@ -137,6 +137,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     int score = 0;
     int lives = 3;
     boolean gameOver = false;
+    boolean blueUsesPrediction = true;
 
     PacMan() {
         initializeGame();
@@ -322,6 +323,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         aheadY = Math.max(0, Math.min(rowCount - 1, aheadY));
         
         return new Node(aheadX, aheadY);
+    }
+    
+    private Node getPacmanNode() {
+        return new Node(pacman.x / tileSize, pacman.y / tileSize);
     }
     
     private List<Node> findPath(Node start, Node target) {
@@ -563,6 +568,31 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                         ghost.updateDirection('U');
                     }
                 }
+            }
+        }
+        else if (ghost.image == blueGhostImage) {
+            if (isAlignedToGrid(ghost)) {
+                Node ghostNode = new Node(ghost.x / tileSize, ghost.y / tileSize);
+                Node target = blueUsesPrediction ? predictPacmanPosition() : getPacmanNode();
+                List<Node> path = findPath(ghostNode, target);
+
+                if (path.size() > 1) {
+                    Node next = path.get(1);
+                    int dx = next.x - ghostNode.x;
+                    int dy = next.y - ghostNode.y;
+
+                    if (dx > 0) {
+                        ghost.updateDirection('R');
+                    } else if (dx < 0) {
+                        ghost.updateDirection('L');
+                    } else if (dy > 0) {
+                        ghost.updateDirection('D');
+                    } else if (dy < 0) {
+                        ghost.updateDirection('U');
+                    }
+                }
+
+                blueUsesPrediction = !blueUsesPrediction;
             }
         }
             // Blinky BFS chase
