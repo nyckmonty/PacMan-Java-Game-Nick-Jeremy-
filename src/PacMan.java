@@ -616,8 +616,46 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 }
             }
         } 
-        else if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
-            ghost.updateDirection('U');
+         // Clyde behavior: chase when far, flee when close
+        else if (ghost.image == orangeGhostImage) {
+            if (isAlignedToGrid(ghost)) {
+
+                int ghostTileX = ghost.x / tileSize;
+                int ghostTileY = ghost.y / tileSize;
+                int pacTileX = pacman.x / tileSize;
+                int pacTileY = pacman.y / tileSize;
+
+                Node ghostNode = new Node(ghostTileX, ghostTileY);
+                Node pacNode = new Node(pacTileX, pacTileY);
+
+                // Tile distance
+                int dist = Math.abs(ghostTileX - pacTileX) + Math.abs(ghostTileY - pacTileY);
+
+                Node target;
+
+                // Clyde runs away when closer than 8 tiles
+                if (dist < 8) {
+                    // Bottom left corner 
+                    target = new Node(1, rowCount - 2);
+                } else {
+                    // Chase pacman
+                    target = pacNode;
+                }
+
+                List<Node> path = bfs(ghostNode, target);
+
+                if (path != null && path.size() > 1) {
+                    Node next = path.get(1);
+
+                    int dx = next.x - ghostNode.x;
+                    int dy = next.y - ghostNode.y;
+
+                    if (dx > 0) ghost.updateDirection('R');
+                    else if (dx < 0) ghost.updateDirection('L');
+                    else if (dy > 0) ghost.updateDirection('D');
+                    else if (dy < 0) ghost.updateDirection('U');
+                }
+            }
         }
 
         ghost.x += ghost.velocityX;
