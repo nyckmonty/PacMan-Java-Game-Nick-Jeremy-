@@ -1,3 +1,21 @@
+/*
+    Pac-Man Ghost AI
+    Authors: Nicholas Montgomery & Jeremy Benjamin
+
+    Original code:
+    Nipuna-Lakruwan. (2025).
+    https://github.com/Nipuna-Lakruwan/PacMan-Java-Game
+
+    Paper Citation:
+    Novikov, A., Yakovlev, S., & Gushchin, I. (2025).
+    Exploring the possibilities of MADDPG for UAV swarm control by simulating in Pac-Man environment.
+    Radioelectronic and Computer Systems, 1(113), 327–337.
+
+    Description:
+    This program implements Blinky using BFS, Pinky using A*, Inky using BFS/A*,
+    and Clyde using distance-based chase/flee behavior.
+*/
+
 import java.awt.*;
 import java.awt.event.*;
 
