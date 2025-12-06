@@ -824,4 +824,24 @@ Strengths:
 -	Dynamic behavior: Clyde is very unpredictable. When fleeing from Pac-Man to the lower left corner, this can cause the player to accidentally follow Clyde and get trapped in corners
 Limitations:
 -	Low threat: Clyde is a very low threat because he doesn’t actually try to get Pac-Man
+ 
+ Pinky
+
+ Pinky tries to cut off Pac-Man when chasing him. He was implemented using an A* algorithm. 
+ He is programmed to target 2 tiles ahead of Pac-Man, looking at where Pac-Man is likely to go. 
+ This way, he tries to anticipate Pac-Man’s next move, rather than simply following him.
+ Strengths:
+ - He is harder for Pac-Man to outrun as he could find ways to get to him quicker.
+ Limitations:
+ - He could be juked easier as a sudden change in direction for Pac-Man could throw him off and help Pac-Man escape him.
+
+ Inky
+
+ Inky acts as a hybrid to both Blinky and Pinky as he alternates between Pac-Man's current tile and his predicted position. 
+ He uses a prediction function to determine whether to chase Pac-Man using the A* algorithm or not. 
+ Strengths: 
+ - He uses two different approaches which makes it harder for Pac-Man to anticipate his next move.
+ Limitations:
+ - He switches a lot, while yes, it can make him unpredictable, it can also make him inconsistent and therefore he may not be as productive as he can be.
+
  */
