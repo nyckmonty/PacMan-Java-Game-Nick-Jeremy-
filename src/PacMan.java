@@ -801,3 +801,27 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         return true;
     }
 }
+
+/*
+Blinky
+
+Blinky directly chases Pac-Man. He was implemented using Breadth-First Search algorithm, which guarantees the shortest path 
+in an unweighted graph. During each movement decision, Blinky uses his and Pac-Man’s current positions to convert them to tile 
+coordinates and performs BFS, determining his new direction based on the graph.
+Strengths:
+-	Optimal Pathfinding: BFS always finds the fastest route to Pac-Man
+Limitations:
+-	Low anticipation: Blinky only chases directly after Pac-Man and doesn’t predict future movement like Pinky
+-	Getting lost: When taking sharp turns, BFS can lead Blinky in a direction where Pac-Man can easily shake him off
+
+Clyde
+
+Clyde chases Pac-Man and when close he gets scared and flees. He was implemented using both the Breadth-First Search algorithm 
+for chasing and a distance-based flee mechanic. When Clyde’s distance is less than 8 tiles from Pac-Man, he will flee to 
+his scatter position, the bottom left corner. During his flee mode, we use BFS again to determine the fastest route to the bottom 
+left corner, accurately reflecting his cowardly personality from the original Pac-Man.
+Strengths:
+-	Dynamic behavior: Clyde is very unpredictable. When fleeing from Pac-Man to the lower left corner, this can cause the player to accidentally follow Clyde and get trapped in corners
+Limitations:
+-	Low threat: Clyde is a very low threat because he doesn’t actually try to get Pac-Man
+ */
